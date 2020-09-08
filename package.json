@@ -1,0 +1,32 @@
+{
+  "name": "react-demo",
+  "version": "1.0.0",
+  "description": "react route learning",
+  "main": "index.js",
+  "repository": "https://Parina512@github.com/Parina512/react-demo.git",
+  "author": "Parina Dalasania <parina512@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "axios": "^0.20.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "^3.4.3"
+  },
+  "scripts": {
+    "start": "react-scripts start"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
