@@ -20,7 +20,8 @@ class App extends Component {
       loginState: localStorage.getItem("userName") ? true : false,
       errorMessage: "",
       password: "",
-      userName: localStorage.getItem("userName") || "",
+      userName: "",
+      loggedInUserName: localStorage.getItem("userName") || "",
     };
   }
 
@@ -41,25 +42,43 @@ class App extends Component {
     const response = await axios.get(urlToReq);
     if (response.data.results.length) {
       if (password === response.data.results[0]["birth_year"]) {
-        localStorage.setItem("userName", userName);
-        this.setState({ errorMessage: "Successfully Logged In." });
-        this.setState({ loginState: true });
+        localStorage.setItem("userName", response.data.results[0]["name"]);
+        this.setState({
+          loggedInUserName: response.data.results[0]["name"],
+          errorMessage: "Successfully Logged In.",
+          loginState: true,
+        });
       } else {
         this.setState({ errorMessage: "Password is incorrect" });
       }
     } else {
       this.setState({ errorMessage: "User not found" });
     }
+    alert(this.state.errorMessage);
+  };
+
+  handleLogout = () => {
+    localStorage.removeItem("userName");
+    this.setState({
+      loginState: false,
+      errorMessage: "",
+      userName: "",
+      password: "",
+      loggedInUserName: "",
+    });
   };
 
   render() {
     return (
       <Router>
         <div>
-          <Header />
           <Switch>
-            <Route exact path="/home">
-              <Home userName={this.state.userName} />
+            <Route exact path="/">
+              <Home
+                userName={this.state.loggedInUserName}
+                handleLogout={this.handleLogout}
+                loginState={this.state.loginState}
+              />
             </Route>
             <Route path="/login">
               <Login
