@@ -17,6 +17,7 @@ class App extends Component {
   constructor() {
     super();
     this.state = {
+      showModal: false,
       loginState: localStorage.getItem("userName") ? true : false,
       errorMessage: "",
       password: "",
@@ -54,7 +55,10 @@ class App extends Component {
     } else {
       this.setState({ errorMessage: "User not found" });
     }
-    alert(this.state.errorMessage);
+
+    if (!this.state.loginState) {
+      this.setState({ showModal: true });
+    }
   };
 
   handleLogout = () => {
@@ -66,6 +70,10 @@ class App extends Component {
       password: "",
       loggedInUserName: "",
     });
+  };
+
+  handleClose = () => {
+    this.setState({ showModal: false });
   };
 
   render() {
@@ -88,6 +96,8 @@ class App extends Component {
                 password={this.state.password}
                 errorMessage={this.state.errorMessage}
                 loginState={this.state.loginState}
+                showModal={this.state.showModal}
+                handleClose={this.handleClose}
               />
             </Route>
           </Switch>

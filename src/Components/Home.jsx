@@ -1,13 +1,22 @@
 import React, { Component } from "react";
 import { Redirect } from "react-router-dom";
 import axios from "axios";
+import {
+  Alert,
+  Button,
+  Container,
+  Row,
+  Col,
+  InputGroup,
+  FormControl,
+  Card,
+  ProgressBar,
+  Modal,
+} from "react-bootstrap";
 
 const debounce = (func, delay) => {
-  console.log("Inside debounce");
   let timeoutID;
   return function (...args) {
-    console.log("Inside debounce's ret func");
-
     if (timeoutID) {
       clearTimeout(timeoutID);
     }
@@ -19,29 +28,28 @@ const debounce = (func, delay) => {
 
 class Home extends Component {
   constructor() {
-    console.log("====constructor");
     super();
     this.state = {
       search: "",
-      stateInfo: {},
+      planetsInfo: {},
+      planetDetail: {},
     };
   }
 
   async componentDidMount() {
-    this.callFunction("");
+    this.searchAPICall("");
   }
 
   searchAPICall = async (planetName) => {
-    console.log("====searchAPICall");
     let urlToCall = `https://swapi.dev/api/planets/?search=${planetName}`;
     const response = await axios.get(urlToCall);
 
     this.setState({
-      stateInfo: response.data,
+      planetsInfo: response.data,
     });
   };
 
-  callFunction = debounce(this.searchAPICall, 5000);
+  callFunction = debounce(this.searchAPICall, 3000);
 
   handleSearch = (event) => {
     const { name, value } = event.target;
@@ -56,42 +64,183 @@ class Home extends Component {
     );
   };
 
+  handleplanetsInfo = (planet) => {
+    this.setState({ planetDetail: planet });
+  };
+
+  handleClose = () => {
+    this.setState({ planetDetail: {} });
+  };
+
   render() {
-    console.log("====render");
     if (!this.props.loginState) {
       return <Redirect to="/login"></Redirect>;
     }
 
+    let totalPopulation = 0;
+    let sortedPlanet = [];
+    if (this.state.planetsInfo.results) {
+      sortedPlanet = [...this.state.planetsInfo.results];
+
+      sortedPlanet.sort((a, b) => {
+        if (b.population === a.population) return b.name > a.name ? -1 : 1;
+        return Number(b.population) - Number(a.population);
+      });
+
+      sortedPlanet.forEach((planet) => {
+        if (planet.population !== "unknown") {
+          totalPopulation += Number(planet.population);
+        }
+      });
+    }
+
     return (
       <div>
-        <h1 style={{ color: "green" }}>Hello {this.props.userName},</h1>
-        <br />
-        <br />
-        <input
-          name="search"
-          value={this.props.search}
-          onChange={this.handleSearch}
-        />
-        <br />
-        <br />
-        <br />
+        <Alert variant="primary">
+          <Alert.Heading>
+            Hello {this.props.userName},
+            <Button
+              style={{ float: "right" }}
+              onClick={this.props.handleLogout}
+              variant="outline-primary"
+            >
+              Logout
+            </Button>
+          </Alert.Heading>
+        </Alert>
+        <Container>
+          <Row>
+            <Col></Col>
+            <Col md={10}>
+              <InputGroup className="mb-3">
+                <FormControl
+                  name="search"
+                  value={this.state.search}
+                  onChange={this.handleSearch}
+                  placeholder="Search Planets..."
+                />
+                <InputGroup.Append>
+                  <Button
+                    variant="outline-primary"
+                    onClick={(event) => {
+                      let { name, value } = event.target;
+                      this.setState({ [name]: value }, () => {
+                        this.searchAPICall(this.state.search);
+                      });
+                    }}
+                  >
+                    Search
+                  </Button>
+                </InputGroup.Append>
+              </InputGroup>
 
-        {this.state.stateInfo.count ? (
-          <div>
-            {this.state.stateInfo.results.map((planet) => {
-              return (
-                <div key={planet.name}>
-                  {/* <p>{planet.name}</p> */}
-                  <a href={planet.url}>{planet.name}</a>
+              {this.state.planetsInfo.count ? (
+                <div>
+                  {sortedPlanet.map((planet) => {
+                    let planetPopulation =
+                      planet.population !== "unknown" ? planet.population : 0;
+                    let populationByCent = planetPopulation
+                      ? ((planetPopulation * 100) / totalPopulation).toFixed(6)
+                      : (0).toFixed(6);
+                    return (
+                      <div key={planet.name}>
+                        <Card>
+                          <Card.Body>
+                            <Card.Title>{planet.name}</Card.Title>
+                            <Card.Text>
+                              <b>{planet.name}</b> is made of mostly{" "}
+                              <b>{planet.terrain}</b> and has gravity of{" "}
+                              <b>{planet.gravity}</b>.<br />
+                              It has population of <b>
+                                {planetPopulation}
+                              </b>{" "}
+                              which is <b>{populationByCent}</b>% of total
+                              population from current list.
+                            </Card.Text>
+                            <ProgressBar
+                              style={{ marginBottom: "10px" }}
+                              now={populationByCent}
+                              label={`${populationByCent}%`}
+                              srOnly
+                            />
+                            <Button
+                              variant="info"
+                              onClick={(event) => {
+                                this.handleplanetsInfo(planet);
+                              }}
+                            >
+                              Explore Planet
+                            </Button>
+                          </Card.Body>
+                        </Card>
+                        <br />
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-            <br />
-            <br />
-          </div>
-        ) : null}
+              ) : null}
+            </Col>
+            <Col></Col>
+          </Row>
+        </Container>
+        <Modal show={!!this.state.planetDetail.name} onHide={this.handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>Login State</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row>
+              <Col>
+                <b>Name</b>
+              </Col>
+              <Col>{this.state.planetDetail.name}</Col>
+            </Row>
+            <hr />
+            <Row>
+              <Col>
+                <b>Surface Water (in %)</b>
+              </Col>
+              <Col>{this.state.planetDetail.surface_water}</Col>
+            </Row>
 
-        <button onClick={this.props.handleLogout}>Logout</button>
+            <hr />
+            <Row>
+              <Col>
+                {" "}
+                <b>Gravity</b>
+              </Col>
+              <Col>{this.state.planetDetail.gravity}</Col>
+            </Row>
+
+            <hr />
+            <Row>
+              <Col>
+                <b>Orbital Period</b>
+              </Col>
+              <Col>{this.state.planetDetail.orbital_period}</Col>
+            </Row>
+
+            <hr />
+            <Row>
+              <Col>
+                <b>Diameter</b>{" "}
+              </Col>
+              <Col>{this.state.planetDetail.diameter}</Col>
+            </Row>
+            <hr />
+            <Row>
+              <Col>
+                <b>Population</b>{" "}
+              </Col>
+              <Col>{this.state.planetDetail.population}</Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={this.handleClose}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        ;
       </div>
     );
   }
