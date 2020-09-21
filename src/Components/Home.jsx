@@ -9,10 +9,10 @@ import {
   Col,
   InputGroup,
   FormControl,
-  Card,
-  ProgressBar,
   Modal,
 } from "react-bootstrap";
+
+import PlanetCard from "./PlanetCard";
 
 const debounce = (func, delay) => {
   let timeoutID;
@@ -64,6 +64,13 @@ class Home extends Component {
     );
   };
 
+  handleLogout = () => {
+    localStorage.removeItem("userName");
+    this.setState({
+      loggedInUserName: "",
+    });
+  };
+
   handleplanetsInfo = (planet) => {
     this.setState({ planetDetail: planet });
   };
@@ -73,7 +80,7 @@ class Home extends Component {
   };
 
   render() {
-    if (!this.props.loginState) {
+    if (!localStorage.getItem("userName")) {
       return <Redirect to="/login"></Redirect>;
     }
 
@@ -98,10 +105,10 @@ class Home extends Component {
       <div>
         <Alert variant="primary">
           <Alert.Heading>
-            Hello {this.props.userName},
+            Hello {localStorage.getItem("userName")},
             <Button
               style={{ float: "right" }}
-              onClick={this.props.handleLogout}
+              onClick={this.handleLogout}
               variant="outline-primary"
             >
               Logout
@@ -137,42 +144,13 @@ class Home extends Component {
               {this.state.planetsInfo.count ? (
                 <div>
                   {sortedPlanet.map((planet) => {
-                    let planetPopulation =
-                      planet.population !== "unknown" ? planet.population : 0;
-                    let populationByCent = planetPopulation
-                      ? ((planetPopulation * 100) / totalPopulation).toFixed(6)
-                      : (0).toFixed(6);
                     return (
                       <div key={planet.name}>
-                        <Card>
-                          <Card.Body>
-                            <Card.Title>{planet.name}</Card.Title>
-                            <Card.Text>
-                              <b>{planet.name}</b> is made of mostly{" "}
-                              <b>{planet.terrain}</b> and has gravity of{" "}
-                              <b>{planet.gravity}</b>.<br />
-                              It has population of <b>
-                                {planetPopulation}
-                              </b>{" "}
-                              which is <b>{populationByCent}</b>% of total
-                              population from current list.
-                            </Card.Text>
-                            <ProgressBar
-                              style={{ marginBottom: "10px" }}
-                              now={populationByCent}
-                              label={`${populationByCent}%`}
-                              srOnly
-                            />
-                            <Button
-                              variant="info"
-                              onClick={(event) => {
-                                this.handleplanetsInfo(planet);
-                              }}
-                            >
-                              Explore Planet
-                            </Button>
-                          </Card.Body>
-                        </Card>
+                        <PlanetCard
+                          planet={planet}
+                          totalPopulation={totalPopulation}
+                          handleplanetsInfo={this.handleplanetsInfo}
+                        />
                         <br />
                       </div>
                     );
